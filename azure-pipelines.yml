@@ -4,26 +4,41 @@ trigger:
 pool:
   vmImage: ubuntu-latest
 
+variables:
+  resourceGroupName: 'rg-devops-lab-dev'
+  location: 'australiaeast'
+  templateFile: 'infra/main.bicep'
+  parameterFile: 'infra/parameters/dev.bicepparam'
+
 steps:
 
 - checkout: self
 
 - script: |
-    echo "Checking Azure CLI version"
+    echo "Checking Azure CLI"
     az version
   displayName: 'Check Azure CLI'
 
 - script: |
-    echo "Checking Bicep version"
+    echo "Checking Bicep CLI"
     az bicep version
   displayName: 'Check Bicep CLI'
 
 - script: |
     echo "Building Bicep template"
-    az bicep build --file infra/main.bicep
-  displayName: 'Build Bicep template'
+    az bicep build --file $(templateFile)
+  displayName: 'Build Bicep Template'
 
-- script: |
-    echo "Listing infra folder"
-    ls infra
-  displayName: 'Verify compiled template'
+- task: AzureCLI@2
+  displayName: 'Run Bicep What-If'
+  inputs:
+    azureSubscription: 'sc-devops-lab'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      echo "Running What-If deployment preview"
+
+      az deployment group what-if \
+        --resource-group $(resourceGroupName) \
+        --template-file $(templateFile) \
+        --parameters @$(parameterFile)
