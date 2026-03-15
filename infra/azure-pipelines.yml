@@ -1,0 +1,32 @@
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+
+- checkout: self
+
+- task: AzureCLI@2
+  displayName: 'Install and verify Bicep'
+  inputs:
+    azureSubscription: ''
+    scriptType: bash
+    scriptLocation: inlineScript
+    inlineScript: |
+      echo "Checking Azure CLI version"
+      az version
+
+      echo "Checking Bicep version"
+      az bicep version
+
+- script: |
+    echo "Building Bicep template"
+    az bicep build --file infra/main.bicep
+  displayName: 'Build Bicep template'
+
+- script: |
+    echo "Listing generated files"
+    ls infra
+  displayName: 'Verify compiled template'
