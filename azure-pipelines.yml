@@ -8,18 +8,15 @@ steps:
 
 - checkout: self
 
-- task: AzureCLI@2
-  displayName: 'Install and verify Bicep'
-  inputs:
-    azureSubscription: ''
-    scriptType: bash
-    scriptLocation: inlineScript
-    inlineScript: |
-      echo "Checking Azure CLI version"
-      az version
+- script: |
+    echo "Checking Azure CLI version"
+    az version
+  displayName: 'Check Azure CLI'
 
-      echo "Checking Bicep version"
-      az bicep version
+- script: |
+    echo "Checking Bicep version"
+    az bicep version
+  displayName: 'Check Bicep CLI'
 
 - script: |
     echo "Building Bicep template"
@@ -27,6 +24,6 @@ steps:
   displayName: 'Build Bicep template'
 
 - script: |
-    echo "Listing generated files"
+    echo "Listing infra folder"
     ls infra
   displayName: 'Verify compiled template'
