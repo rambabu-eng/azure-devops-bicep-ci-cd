@@ -5,50 +5,88 @@ pool:
   vmImage: ubuntu-latest
 
 variables:
+  azureServiceConnection: 'sc-devops-lab'
   resourceGroupName: 'rg-devops-lab-dev'
   templateFile: 'infra/main.bicep'
   parameterFile: 'infra/parameters/dev.bicepparam'
 
-steps:
-- checkout: self
+stages:
 
-- script: |
-    echo "Checking Azure CLI"
-    az version
-  displayName: 'Check Azure CLI'
+- stage: Validate
+  displayName: 'Validate Bicep'
+  jobs:
+  - job: ValidateJob
+    displayName: 'Validate Infrastructure Code'
+    steps:
+    - checkout: self
 
-- script: |
-    echo "Checking Bicep CLI"
-    az bicep version
-  displayName: 'Check Bicep CLI'
+    - script: |
+        echo "Checking Azure CLI"
+        az version
+      displayName: 'Check Azure CLI'
 
-- script: |
-    echo "Building Bicep template"
-    az bicep build --file $(templateFile)
-  displayName: 'Build Bicep Template'
+    - script: |
+        echo "Checking Bicep CLI"
+        az bicep version
+      displayName: 'Check Bicep CLI'
 
-- task: AzureCLI@2
-  displayName: 'Show Azure Context'
-  inputs:
-    azureSubscription: 'sc-devops-lab'
-    scriptType: 'bash'
-    scriptLocation: 'inlineScript'
-    inlineScript: |
-      echo "Signed in subscription:"
-      az account show --output table
-      echo "Checking target resource group:"
-      az group show --name $(resourceGroupName) --output table
+    - script: |
+        echo "Building Bicep template"
+        az bicep build --file $(templateFile)
+      displayName: 'Build Bicep Template'
 
-- task: AzureCLI@2
-  displayName: 'Run Bicep What-If'
-  inputs:
-    azureSubscription: 'sc-devops-lab'
-    scriptType: 'bash'
-    scriptLocation: 'inlineScript'
-    inlineScript: |
-      echo "Running What-If deployment preview"
+- stage: WhatIf
+  displayName: 'Preview Azure Changes'
+  dependsOn: Validate
+  jobs:
+  - job: WhatIfJob
+    displayName: 'Run What-If'
+    steps:
+    - checkout: self
 
-      az deployment group what-if \
-        --resource-group $(resourceGroupName) \
-        --template-file $(templateFile) \
-        --parameters $(parameterFile)
+    - task: AzureCLI@2
+      displayName: 'Show Azure Context'
+      inputs:
+        azureSubscription: '$(azureServiceConnection)'
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          echo "Signed in subscription:"
+          az account show --output table
+          echo "Checking target resource group:"
+          az group show --name $(resourceGroupName) --output table
+
+    - task: AzureCLI@2
+      displayName: 'Run Bicep What-If'
+      inputs:
+        azureSubscription: '$(azureServiceConnection)'
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          echo "Running What-If deployment preview"
+          az deployment group what-if \
+            --resource-group $(resourceGroupName) \
+            --template-file $(templateFile) \
+            --parameters $(parameterFile)
+
+- stage: Deploy
+  displayName: 'Deploy to Azure'
+  dependsOn: WhatIf
+  jobs:
+  - job: DeployJob
+    displayName: 'Deploy Infrastructure'
+    steps:
+    - checkout: self
+
+    - task: AzureCLI@2
+      displayName: 'Deploy Bicep Template'
+      inputs:
+        azureSubscription: '$(azureServiceConnection)'
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          echo "Deploying infrastructure to Azure"
+          az deployment group create \
+            --resource-group $(resourceGroupName) \
+            --template-file $(templateFile) \
+            --parameters $(parameterFile)
