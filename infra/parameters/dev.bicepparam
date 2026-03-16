@@ -1,3 +1,3 @@
 using '../main.bicep'
 
-param storageAccountName = 'ramdevopsstorage01'
+param storageAccountName = 'rbdevopslab260317'

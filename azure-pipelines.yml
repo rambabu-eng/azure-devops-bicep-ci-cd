@@ -6,12 +6,10 @@ pool:
 
 variables:
   resourceGroupName: 'rg-devops-lab-dev'
-  location: 'australiaeast'
   templateFile: 'infra/main.bicep'
   parameterFile: 'infra/parameters/dev.bicepparam'
 
 steps:
-
 - checkout: self
 
 - script: |
@@ -30,6 +28,18 @@ steps:
   displayName: 'Build Bicep Template'
 
 - task: AzureCLI@2
+  displayName: 'Show Azure Context'
+  inputs:
+    azureSubscription: 'sc-devops-lab'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      echo "Signed in subscription:"
+      az account show --output table
+      echo "Checking target resource group:"
+      az group show --name $(resourceGroupName) --output table
+
+- task: AzureCLI@2
   displayName: 'Run Bicep What-If'
   inputs:
     azureSubscription: 'sc-devops-lab'
@@ -41,4 +51,4 @@ steps:
       az deployment group what-if \
         --resource-group $(resourceGroupName) \
         --template-file $(templateFile) \
-        --parameters @$(parameterFile)
+        --parameters $(parameterFile)
