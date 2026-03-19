@@ -7,11 +7,8 @@ The solution automates validation and deployment of Azure resources using a CI/C
 
 This project was executed using Azure DevOps (Azure Repos) and mirrored to GitHub for visibility and documentation.
 
-🧱 Architecture
-
 ## 🧱 Architecture
-
-![Architecture Diagram](docs/architecture-diagram.png)
+![Architecture Diagram](docs/architecture/architecture-diagram.png)
 
 
 🔍 Architecture Flow
@@ -63,17 +60,16 @@ Storage Account	Provisioned via Bicep
 📸 Evidence (Execution Proof)
 ✅ Pipeline Run (Successful Execution)
 
-![Pipeline Success](docs/screenshots/Pipeline run success.png)
+![Pipeline](docs/screenshots/pipeline-success.png)
 
 
 🔍 What-If Validation Output
 
-![What-If Output](docs/screenshots/What-if deployment flow.png)
+![What-If](docs/screenshots/what-if.png)
 
 
 ☁️ Azure Resources (Post Deployment)
-![Azure Resources](docs/screenshots/Azure storage account deployment.png)
-
+![Resources](docs/screenshots/resources.png)
 
 
 📁 Repository Structure
